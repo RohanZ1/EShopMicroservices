@@ -1,10 +1,23 @@
 ﻿
 
+using FluentValidation;
+
 namespace Catalog.API.Products.CreateProduct
 {
     public record CreateProductCommand(Guid Id, string Name, List<string> Category, string Description, string ImageFile, decimal Price)
       : ICommand<CreateProductResult>;//similar to inherited a class with properties inside paranthesis which is inheriting from ICommand<TResponse>
     public record CreateProductResult(Guid Id);//similar to a class with one propery Guid Id
+                                              
+    public class CreateProductCommandValidator : AbstractValidator<CreateProductCommand> //Fluent Validation class for CreateProductCommand slice . Contains all model based rules . Alternative to Attributes
+    {
+        public CreateProductCommandValidator()
+        {
+            RuleFor(x => x.Name).NotEmpty().WithMessage("Name is required");
+            RuleFor(x => x.Category).NotEmpty().WithMessage("Category is required");
+            RuleFor(x => x.ImageFile).NotEmpty().WithMessage("ImageFile is required");
+            RuleFor(x => x.Price).GreaterThan(0).WithMessage("Price must be greater than 0");
+        }
+    }
     internal class CreateProductCommandHandler(IDocumentSession session) :
      ICommandHandler<CreateProductCommand, CreateProductResult>
     {
