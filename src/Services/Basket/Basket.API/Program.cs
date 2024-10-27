@@ -1,12 +1,14 @@
 
 using Basket.API.Data;
 using BuildingBlocks.Exceptions.Handlers;
+using Discount.Grpc;
 using HealthChecks.UI.Client;
 using Microsoft.Extensions.Caching.Distributed;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddExceptionHandler<CustomExceptionHandlers>();
+
 //Add services to the container 
+//Application Services
 var assembly =typeof(Program).Assembly;
 builder.Services.AddCarter();
 builder.Services.AddMediatR(config =>
@@ -16,6 +18,7 @@ builder.Services.AddMediatR(config =>
     config.AddOpenBehavior(typeof(LoggingBehavior<,>));
     
 });
+//Data Services
 builder.Services.AddScoped<IBasketRepository, BasketRepository>();
 builder.Services.AddMarten(opts =>
 {
@@ -23,9 +26,6 @@ builder.Services.AddMarten(opts =>
     opts.Schema.For<ShoppingCart>().Identity(x=>x.UserName);//this overrides UserName field as Id of Marten document 
 }).UseLightweightSessions();
 builder.Services.AddScoped<IBasketRepository,BasketRepository>();
-builder.Services.AddHealthChecks()
-       .AddNpgSql(builder.Configuration.GetConnectionString("Database")!)
-       .AddRedis(builder.Configuration.GetConnectionString("Redis")!);
 //builder.Services.AddScoped<IBasketRepository,CachedBasketRepository>();
 #region Without Scrutor library we add decorated service
 //builder.Services.AddScoped<IBasketRepository>(provider =>
@@ -42,6 +42,30 @@ builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = builder.Configuration.GetConnectionString("Redis");
 });
+//Grpc Services
+builder.Services.AddGrpcClient<DiscountProtoService.DiscountProtoServiceClient>(options =>
+{
+    options.Address = new Uri(builder.Configuration["GrpcSettings:DiscountUrl"]!);
+})
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler//added to fix SSL certificate exception. Recommended to use only in development environment
+    {
+        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+    });
+//.ConfigureAdditionalHttpMessageHandlers(() =>
+//{
+//    var handler = new HttpClientHandler
+//    {
+//        ServerCertificateCustomValidationCallback=HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+//    };
+//    return handler;
+//});
+
+
+builder.Services.AddExceptionHandler<CustomExceptionHandlers>();
+builder.Services.AddHealthChecks()
+       .AddNpgSql(builder.Configuration.GetConnectionString("Database")!)
+       .AddRedis(builder.Configuration.GetConnectionString("Redis")!);
+
 var app = builder.Build();
 
 app.UseExceptionHandler(options => { });//disable default behavior so that custom behavior can be applicable
