@@ -9,8 +9,8 @@ namespace Ordering.Domain.ValueObjects
         private OrderName(string value) => Value = value;
         public static OrderName Of(string value)//of method is used to instantiate ValueObjects inside Of method by uysing a private constructor . This way we can give validations to fields before instantiating
         {//encapsulated all the relevant properties and buisness rules within the Of method for each ValueObject.
-            ArgumentNullException.ThrowIfNull(value);
-            ArgumentOutOfRangeException.ThrowIfNotEqual(value.Length, DefaultLength);
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(value);
+         //   ArgumentOutOfRangeException.ThrowIfNotEqual(value.Length, DefaultLength);
            
             return new OrderName(value);
         }

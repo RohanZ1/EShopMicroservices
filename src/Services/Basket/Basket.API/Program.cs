@@ -1,6 +1,7 @@
 
 using Basket.API.Data;
 using BuildingBlocks.Exceptions.Handlers;
+using BuildingBlocks.Messaging.MassTransit;
 using Discount.Grpc;
 using HealthChecks.UI.Client;
 using Microsoft.Extensions.Caching.Distributed;
@@ -59,8 +60,9 @@ builder.Services.AddGrpcClient<DiscountProtoService.DiscountProtoServiceClient>(
 //    };
 //    return handler;
 //});
-
-
+//Async communication services
+builder.Services.AddMessageBroker(builder.Configuration);
+//Cross-Cutting concerns services
 builder.Services.AddExceptionHandler<CustomExceptionHandlers>();
 builder.Services.AddHealthChecks()
        .AddNpgSql(builder.Configuration.GetConnectionString("Database")!)

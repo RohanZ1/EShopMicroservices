@@ -11,7 +11,7 @@ Application - MediatR i.e CQRS design pattern
 API- Carter,HealthChecks,...
  */
 builder.Services
-       .AddApplicationServices()//mediatr dependencies added in Application layer
+       .AddApplicationServices(builder.Configuration)//mediatr dependencies added in Application layer
        .AddInfrastructureServices(builder.Configuration)//mediatr is used in Infrastructure layers for Intersecptors. So, we need to add medatR before adding Infra layer
        .AddApiServices(builder.Configuration);
 
